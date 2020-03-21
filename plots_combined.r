@@ -94,7 +94,7 @@
     geom_line() +
     geom_point() +
     theme_bw() +
-    xlab("Age (in years)") + ylab("Proportion of the\npopulation")
+    xlab("Age (in years)") + ylab("Proportion of the\ncarrying population")
   ggsave(paste("Sims/Combined/",Fit_type,"/Carriers.tiff",sep=""),p_carriers, compression="lzw", unit="cm", width=12,height=6, dpi=resolution)
   
   df_all_car = df_all %>% gather(Type, prevalence, -Setting, -Pop_prop, -ab_hi, -prop.VT.carriers)
@@ -176,7 +176,8 @@
           axis.line = element_line(color="white"),
           axis.ticks = element_line(color="white"),
           text = element_text(size=8),
-          axis.text.x = element_text(angle =90, hjust = .5)) 
+          axis.text.x = element_text(angle =90, hjust = .5))+
+    xlab("age of participant") + ylab("age of contact")
     
   ggsave(paste("Sims/Combined/",Fit_type,"/Contacts.tiff",sep=""),p_contacts, compression="lzw", unit="cm", width=19,height=17, dpi=resolution)
   
@@ -291,7 +292,8 @@
     facet_grid(outcome~setting, scales="free") + theme_bw() +
     ylab("") + xlab("") +
     scale_y_log10(breaks=c(0.1,.5,1,5,10,50,100), minor_breaks=c(seq(.1,1,by=0.1),seq(2,10,by=1),seq(20,100,by=10))) +
-    theme(text = element_text(size=8), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+    theme(text = element_text(size=8), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))+
+    scale_color_discrete(name="Age group")
   ggsave(paste("Sims/Combined/",Fit_type,"/infections_U1.tiff",sep=""),p.u1, compression="lzw", unit="cm", width=19,height=10, dpi=resolution)
   
   
@@ -372,7 +374,8 @@
     facet_grid(outcome~setting, scales="free") + theme_bw() +
     ylab("") + xlab("") +
     scale_y_log10(breaks=c(0.1,.5,1,5,10,50,100), minor_breaks=c(seq(.1,1,by=0.1),seq(2,10,by=1),seq(20,100,by=10))) +
-    theme(text = element_text(size=8), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5))
+    theme(text = element_text(size=8), axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)) +
+    scale_color_discrete(name="Age group")
   ggsave(paste("Sims/Combined/",Fit_type,"/infections_all.tiff",sep=""),p.all, compression="lzw", unit="cm", width=19,height=10, dpi=resolution)
     
  

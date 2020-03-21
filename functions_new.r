@@ -67,4 +67,3 @@ get_mixing_mat <- function(df_mixing_by_id_prop,df){
   colnames(Mixing_mat)=rownames(Mixing_mat)
   return(Mixing_mat) 
 }
-

@@ -17,6 +17,7 @@ require("rootSolve")
 require("Rcpp")
 require("RcppArmadillo")
 
+setwd("C:/Users/Stefan/Documents/github/Pneumo_Trans_Inf_private")
 source("functions_new.r")
 sourceCpp("functions_fast.cpp")
 
@@ -29,16 +30,21 @@ Save_out=T
 # sensitivity analyses
 Fit_type="Susceptibility" #"Susceptibility" ,"Transmissibility"
 Dual_carr="VT" #VT , NVT
+NTwaningSens = F #alternative waning assumption for Nha trang?
+lowComp = F #alternative assumption on competition parameter. 
+nonPhysicalContacts = F #also include nonphysical contacts (no such recoreded in Kilifi)
 
 # adjust accordingly
 if(Fit_type=="Susceptibility") {Fit_type_num = 1}else if(Fit_type=="Transmissibility"){Fit_type_num = 2}
 sim.load=paste0("sim_",setting,"_",substr(Fit_type,1,3))
-sim=paste0("sim_",setting,"_",substr(Fit_type,1,3))
+sim=paste0("Sim_",setting,"_",substr(Fit_type,1,3))
 if(Dual_carr=="VT"){
   dc = 1
 }else{
   dc=0
   sim=paste0(sim,"_NVT")}
+if(lowComp) sim=paste0(sim,"_lowComp") 
+if(nonPhysicalContacts) sim=paste0(sim,"_allContacts") 
 
 # set up data
 df_Kilifi=data.frame(Setting="Kilifi",
@@ -66,7 +72,7 @@ df_NT=data.frame(Setting="NT",
                  VT.prev=c(0.266,.245,.018,.007,.008), 
                  NVT.prev=c(.074,.202,.092,.012,.013),
                  N.carr=c(41,63,55,262,98),
-                 VT.clear=1/c(72,34.8,18,17,17), #from E&W
+                 VT.clear=1/c(72,34.8,18,17,17), #from E&W - sensitivity analyses: use Kilifi
                  NVT.clear=1/c(72,34.8,18,17,17))
 df_Fin=data.frame(Setting="Fin",
                   Age_groups=c("<1y","1-5y","6-17y","18+"),
@@ -78,22 +84,37 @@ df_Fin=data.frame(Setting="Fin",
                   VT.clear=c(.67,.67,1,1)/30,
                   NVT.clear=c(.67,.67,1,1)/30)
 
+if(NTwaningSens){
+  sim = "Sim_NT_Sus_SensWaning"
+  df_NT$VT.clear = c(.062,.143,.343,.343,.343)/7
+  df_NT$NVT.clear= c(.086,.159,.349,.349,.349)/7
+}
+
 #### set parameters
 if(setting=="Kilifi"){df=df_Kilifi
 }else if(setting=="EW"){df=df_EW;
 }else if(setting=="NT"){df=df_NT
 }else if(setting=="Fin"){df=df_Fin}
-competition=0.1
+competition=0.1 
+if(lowComp) competition=0.3
 no.agegps=dim(df)[1]
 agegp.l=df$Age_group_upper - c(0,df$Age_group_upper[-no.agegps])
 state_prop=c(agegp.l*100-2,rep(1,no.agegps),rep(1,no.agegps),rep(0,no.agegps))
 
 #### Mixing
 df_mixing_by_id = read.csv(paste0("Data/ContactsbyID_",df$Setting[1],".csv"),header=T)
+if (nonPhysicalContacts) df_mixing_by_id = read.csv(paste0("Data/ContactsbyID_",df$Setting[1],"_all.csv"),header=T)
 no.samples=no.samples = 5 #1% of samples resampled every step
 
 df_mixing_by_id_curr = df_mixing_by_id
 Mix_mat = get_mixing_mat(df_mixing_by_id_curr,df)
+
+#number of infant contacts
+df_mixing_by_id_curr %>% replace(is.na(.), 0) %>%
+  filter(p_agegp=="agegp1") %>% 
+  dplyr::select(starts_with("age")) %>%
+  summarise_all(mean, na.rm = T) %>%
+  sum
 
 #### MCMC
 acceptance=0
@@ -106,9 +127,12 @@ scaling_max=10; scaling=1
 VT.prev.model.curr=NA; NVT.prev.model.curr=NA
 U1_FOI_prop_curr=NA; all_FOI_prop_curr=NA
 load(file=paste0("Sims\\",sim.load,"\\R_out.Rdata")); covariance_matrix0=covariance_matrix
-mix_id_counts = mixingIDsav[rowSums(mixingIDsav)>0,df_mixing_by_id$local_id %>% as.character()] %>% tail(1) %>% c()
-df_mixing_by_id_curr = df_mixing_by_id[rep(1:dim(df_mixing_by_id)[1], mix_id_counts),]
-Mix_mat = get_mixing_mat(df_mixing_by_id_curr,df)
+if(NTwaningSens) df = df_NT
+if(!nonPhysicalContacts){
+  mix_id_counts = mixingIDsav[rowSums(mixingIDsav)>0,df_mixing_by_id$local_id %>% as.character()] %>% tail(1) %>% c()
+  df_mixing_by_id_curr = df_mixing_by_id[rep(1:dim(df_mixing_by_id)[1], mix_id_counts),]
+  Mix_mat = get_mixing_mat(df_mixing_by_id_curr,df)
+}
 
 #create variables to store results
 psav=matrix(NA,nrow=MCMC.length/Thin,ncol=2*no.agegps); rownames(psav)=paste("MCMC",1:(MCMC.length/Thin)); colnames(psav)=paste(rep(c("VT","NVT"),each=no.agegps),df$Age_groups)
@@ -218,8 +242,8 @@ for (i in 1:MCMC.length){
 
 
 
-if(Save_out & geterrmessage()=="") {
-  save(maxeigvsav,p_curr,LL_curr,covariance_matrix, mixingIDsav, InfectionMatrix, psav, prevsav, df, FOIcontributionsav, file=paste0("Sims\\",sim,"\\R_out.Rdata"))
+if(Save_out) {
+  save(maxeigvsav,p_curr,LL_curr,covariance_matrix, mixingIDsav, InfectionMatrix, psav, prevsav, df, FOIcontributionsav, sim, file=paste0("Sims\\",sim,"\\R_out.Rdata"))
   source("plots.r")
   setting %>% print()
   }

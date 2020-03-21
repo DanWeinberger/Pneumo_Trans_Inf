@@ -12,9 +12,9 @@ require("GGally")
 
 #setting="NT"
 #Fit_type="Susceptibility" #"Susceptibility" ,"Transmissibility"
-sim=paste0("sim_",setting,"_",substr(Fit_type,1,3))
+#sim=paste0("sim_",setting,"_",substr(Fit_type,1,3))
 
-load(file=paste0("Sims\\",sim,"\\R_out.Rdata"))
+#load(file=paste0("Sims\\",sim,"\\R_out.Rdata"))
 no.agegps=dim(df)[1]
 
 infs_VT_ann = (df$Population* df$VT.prev * df$VT.clear * 365) %>% sum() #annual number of new VT infections
