@@ -17,7 +17,6 @@ require("rootSolve")
 require("Rcpp")
 require("RcppArmadillo")
 
-setwd("C:/Users/Stefan/Documents/github/Pneumo_Trans_Inf_private")
 source("functions_new.r")
 sourceCpp("functions_fast.cpp")
 

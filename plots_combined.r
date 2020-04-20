@@ -84,15 +84,13 @@
   df_all = df_all[,c("ab_hi","Pop_prop","VT.prev","NVT.prev","Setting","prop.VT.carriers")] %>% rbind(data.frame(ab_hi=0, Pop_prop=0, VT.prev=c(.41,.266,.431,.121), NVT.prev=c(0.46,.074,.118,.048), Setting=c("Kilifi","NT","EW","Fin"), prop.VT.carriers=0))
   
   p_demographics <- ggplot(df_all, aes(x=ab_hi, y=Pop_prop, group=Setting, col=Setting)) +
-    geom_line() +
-    geom_point() +
+    geom_step(direction="vh")+
     theme_bw() +
     xlab("Age (in years)") + ylab("Proportion of the\npopulation")
   ggsave(paste("Sims/Combined/",Fit_type,"/demographics.tiff",sep=""),p_demographics, compression="lzw", unit="cm", width=12,height=6, dpi=resolution)
 
   p_carriers <- ggplot(df_all, aes(x=ab_hi, y=prop.VT.carriers, group=Setting, col=Setting)) +
-    geom_line() +
-    geom_point() +
+    geom_step(direction="vh") +
     theme_bw() +
     xlab("Age (in years)") + ylab("Proportion of the\ncarrying population")
   ggsave(paste("Sims/Combined/",Fit_type,"/Carriers.tiff",sep=""),p_carriers, compression="lzw", unit="cm", width=12,height=6, dpi=resolution)
